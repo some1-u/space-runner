@@ -1,0 +1,136 @@
+import { updateCamera, getCameraX, resetCamera, getCameraCurrentSpeed } from "./camera.js";
+import { player, setupInput, updatePlayer, resetPlayer } from "./player.js";
+import {
+  platforms,
+  createInitialPlatform,
+  generateNextPlatform,
+  updateDisappearingPlatforms,
+  updateMovingPlatforms,
+  removeOffscreenPlatforms,
+  clearPlatforms,
+} from "./platforms.js";
+import {
+  drawSpaceBackground,
+  drawStarfield,
+  updateAndDrawPlanets,
+  resetSpaceBackground,
+} from "./spaceBackground.js";
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let viewWidth = 0;
+let viewHeight = 0;
+let gameRunning = true;
+let gameTime = 0;
+let lastFrameTime = performance.now();
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  viewWidth = window.innerWidth;
+  viewHeight = window.innerHeight;
+  canvas.style.width = `${viewWidth}px`;
+  canvas.style.height = `${viewHeight}px`;
+  canvas.width = Math.floor(viewWidth * dpr);
+  canvas.height = Math.floor(viewHeight * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+setupInput();
+
+function respawn() {
+  clearPlatforms();
+  createInitialPlatform(viewHeight, gameTime);
+  generateNextPlatform(viewHeight, viewWidth, gameTime, player);
+  generateNextPlatform(viewHeight, viewWidth, gameTime, player);
+  generateNextPlatform(viewHeight, viewWidth, gameTime, player);
+  const respawnPlatform = platforms[0];
+  resetPlayer(respawnPlatform);
+  resetCamera();
+  lastFrameTime = performance.now();
+  resetSpaceBackground();
+}
+
+function draw() {
+  const cameraX = getCameraX();
+
+  drawSpaceBackground(ctx, cameraX, viewWidth, viewHeight);
+  drawStarfield(ctx, cameraX, viewWidth, viewHeight);
+  updateAndDrawPlanets(ctx, cameraX, viewWidth, viewHeight);
+
+  ctx.save();
+  ctx.translate(-cameraX, 0);
+
+  for (const platform of platforms) {
+    if (platform.isDisappearing && platform.hasLanded) {
+      const now = Date.now();
+      const fadeProgress = Math.min(1, (now - platform.landTime) / 1000);
+      ctx.globalAlpha = 1 - fadeProgress * 0.7;
+    }
+
+    ctx.fillStyle = platform.color;
+    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+    ctx.strokeStyle = "#2C3E50";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  ctx.strokeStyle = "#2C3E50";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+  ctx.fillStyle = "#FFF";
+  ctx.fillRect(player.x + 8, player.y + 10, 8, 8);
+  ctx.fillRect(player.x + 24, player.y + 10, 8, 8);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(player.x + 10, player.y + 12, 4, 4);
+  ctx.fillRect(player.x + 26, player.y + 12, 4, 4);
+
+  ctx.restore();
+}
+
+function gameLoop() {
+  const now = performance.now();
+  const deltaTime = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
+
+  if (gameRunning) {
+    gameTime += deltaTime;
+
+    updateMovingPlatforms(deltaTime, player);
+    updateDisappearingPlatforms(player);
+
+    const died = updatePlayer(deltaTime, platforms, viewHeight);
+    if (died) {
+      respawn();
+    } else {
+      updateCamera(deltaTime, player.hasJumped, player.x, viewWidth);
+
+      const rightmostPlatform = platforms[platforms.length - 1];
+      const generationBuffer = Math.max(500, getCameraCurrentSpeed() * 2);
+      if (
+        rightmostPlatform.x + rightmostPlatform.width <
+        getCameraX() + viewWidth + generationBuffer
+      ) {
+        generateNextPlatform(viewHeight, viewWidth, gameTime, player);
+      }
+
+      removeOffscreenPlatforms(getCameraX());
+    }
+  }
+
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+respawn();
+gameLoop();

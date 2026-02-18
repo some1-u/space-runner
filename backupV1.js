@@ -49,7 +49,7 @@ function getPlatformWidth() {
   const totalWeight = narrowWeight + mediumWeight + wideWeight;
   const normalizedNarrow = narrowWeight / totalWeight;
   const normalizedMedium = mediumWeight / totalWeight;
-  
+
   if (roll < normalizedNarrow) {
     return Math.floor(80 + Math.random() * 40);
   } else if (roll < normalizedNarrow + normalizedMedium) {
@@ -62,56 +62,66 @@ function getPlatformWidth() {
 function shouldSpawnDisappearingPlatform() {
   const lastPlatform = platforms[platforms.length - 1];
   if (lastPlatform && lastPlatform.isMoving) return false;
-  
+
   const difficultyProgress = Math.min(1, gameTime / 180);
-  const spawnChance = 0.10 + (0.25 - 0.10) * difficultyProgress;
-  
+  const spawnChance = 0.1 + (0.25 - 0.1) * difficultyProgress;
+
   return Math.random() < spawnChance;
 }
 
 function shouldSpawnMovingPlatform() {
   const lastPlatform = platforms[platforms.length - 1];
-  if (lastPlatform && (lastPlatform.isDisappearing || lastPlatform.isVerticalMoving)) return false;
-  
+  if (
+    lastPlatform &&
+    (lastPlatform.isDisappearing || lastPlatform.isVerticalMoving)
+  )
+    return false;
+
   let platformsSinceLastMoving = 0;
   for (let i = platforms.length - 1; i >= 0; i--) {
     if (platforms[i].isMoving || platforms[i].isVerticalMoving) break;
     platformsSinceLastMoving++;
   }
-  
+
   if (platformsSinceLastMoving < 3) return false;
-  
+
   const difficultyProgress = Math.min(1, gameTime / 180);
-  const spawnChance = 0.08 + (0.20 - 0.08) * difficultyProgress;
-  
+  const spawnChance = 0.08 + (0.2 - 0.08) * difficultyProgress;
+
   return Math.random() < spawnChance;
 }
 
 function shouldSpawnVerticalMovingPlatform() {
   const lastPlatform = platforms[platforms.length - 1];
-  if (lastPlatform && (lastPlatform.isDisappearing || lastPlatform.isMoving || lastPlatform.isVerticalMoving)) return false;
-  
+  if (
+    lastPlatform &&
+    (lastPlatform.isDisappearing ||
+      lastPlatform.isMoving ||
+      lastPlatform.isVerticalMoving)
+  )
+    return false;
+
   let platformsSinceLastVerticalMoving = 0;
   for (let i = platforms.length - 1; i >= 0; i--) {
     if (platforms[i].isVerticalMoving) break;
     platformsSinceLastVerticalMoving++;
   }
-  
+
   if (platformsSinceLastVerticalMoving < 3) return false;
-  
+
   const difficultyProgress = Math.min(1, gameTime / 180);
   const spawnChance = 0.07 + (0.15 - 0.07) * difficultyProgress;
-  
+
   return Math.random() < spawnChance;
 }
 
 function updateDisappearingPlatforms() {
   const now = Date.now();
-  
+
   for (let i = platforms.length - 1; i >= 0; i--) {
     const platform = platforms[i];
     if (!platform.isDisappearing || !platform.hasLanded) continue;
-    
+
     if (now - platform.landTime >= 1000) {
       if (player.onMovingPlatform === platform) {
         player.onMovingPlatform = null;
@@ -126,15 +136,15 @@ function updateMovingPlatforms(deltaTime) {
   for (let i = platforms.length - 1; i >= 0; i--) {
     const platform = platforms[i];
     if (!platform.isMoving && !platform.isVerticalMoving) continue;
-    
+
     if (platform.isMoving) {
       const previousX = platform.x;
-      
-      if (platform.phase === 'extending') {
+
+      if (platform.phase === "extending") {
         const newX = platform.x + platform.speed;
         if (newX >= platform.targetX) {
           platform.x = platform.targetX;
-          platform.phase = 'returning';
+          platform.phase = "returning";
         } else {
           platform.x = newX;
         }
@@ -142,28 +152,31 @@ function updateMovingPlatforms(deltaTime) {
         const newX = platform.x - platform.speed;
         if (newX <= platform.startingX) {
           platform.x = platform.startingX;
-          platform.phase = 'extending';
+          platform.phase = "extending";
         } else {
           platform.x = newX;
         }
       }
-      
+
       platform.deltaX = platform.x - previousX;
-      
-      if (player.onMovingPlatform === platform && (platform.x < -1000 || platform.x > 10000)) {
+
+      if (
+        player.onMovingPlatform === platform &&
+        (platform.x < -1000 || platform.x > 10000)
+      ) {
         player.onMovingPlatform = null;
         player.onGround = false;
       }
     }
-    
+
     if (platform.isVerticalMoving) {
       const previousY = platform.y;
-      
-      if (platform.direction === 'down') {
+
+      if (platform.direction === "down") {
         const newY = platform.y + platform.speed;
         if (newY >= platform.startingY + platform.movementRange) {
           platform.y = platform.startingY + platform.movementRange;
-          platform.direction = 'up';
+          platform.direction = "up";
         } else {
           platform.y = newY;
         }
@@ -171,15 +184,18 @@ function updateMovingPlatforms(deltaTime) {
         const newY = platform.y - platform.speed;
         if (newY <= platform.startingY - platform.movementRange) {
           platform.y = platform.startingY - platform.movementRange;
-          platform.direction = 'down';
+          platform.direction = "down";
         } else {
           platform.y = newY;
         }
       }
-      
+
       platform.deltaY = platform.y - previousY;
-      
-      if (player.onMovingPlatform === platform && (platform.y < -1000 || platform.y > 10000)) {
+
+      if (
+        player.onMovingPlatform === platform &&
+        (platform.y < -1000 || platform.y > 10000)
+      ) {
         player.onMovingPlatform = null;
         player.onGround = false;
       }
@@ -264,7 +280,7 @@ function generateNextPlatform() {
   const yMin = PLATFORM_Y_MIN;
   let yMax = Math.min(
     viewHeight - platformHeight - 50,
-    viewHeight * PLATFORM_Y_MAX_FRAC
+    viewHeight * PLATFORM_Y_MAX_FRAC,
   );
   if (yMax <= yMin || !Number.isFinite(yMax)) {
     yMax = Math.max(yMin + 200, (viewHeight || 600) - platformHeight - 50);
@@ -309,9 +325,10 @@ function generateNextPlatform() {
     dy = nextY - lastPlatform.y;
     range = getReachableHorizontalRange(dy);
   } else {
-    dy = Math.random() < 0.5
-      ? -Math.min(MIN_HEIGHT_INCREASE, MAX_VERTICAL_INCREASE)
-      : Math.min(MIN_VERTICAL_STEP, 100);
+    dy =
+      Math.random() < 0.5
+        ? -Math.min(MIN_HEIGHT_INCREASE, MAX_VERTICAL_INCREASE)
+        : Math.min(MIN_VERTICAL_STEP, 100);
     nextY = lastPlatform.y + dy;
     nextY = Math.max(yMin, Math.min(nextY, yMax));
     dy = nextY - lastPlatform.y;
@@ -319,7 +336,8 @@ function generateNextPlatform() {
   }
 
   if (range.max <= range.min) {
-    nextY = lastPlatform.y +
+    nextY =
+      lastPlatform.y +
       (Math.random() < 0.5 ? -MIN_HEIGHT_INCREASE : MIN_VERTICAL_STEP);
     nextY = Math.max(reachableYMin, Math.min(nextY, reachableYMax));
     dy = nextY - lastPlatform.y;
@@ -337,10 +355,10 @@ function generateNextPlatform() {
   const gapMax = range.min + span * diff.gapFrac[1];
   const gap = Math.max(
     MIN_GAP,
-    Math.min(MAX_GAP, gapMin + Math.random() * (gapMax - gapMin))
+    Math.min(MAX_GAP, gapMin + Math.random() * (gapMax - gapMin)),
   );
   let nextX = lastPlatform.x + lastPlatform.width + gap;
-  
+
   if (lastPlatform.isMoving) {
     const maxExtensionX = Math.max(lastPlatform.x, lastPlatform.targetX);
     nextX = maxExtensionX + lastPlatform.width + gap;
@@ -348,42 +366,47 @@ function generateNextPlatform() {
 
   const isDisappearing = shouldSpawnDisappearingPlatform();
   const isMoving = !isDisappearing && shouldSpawnMovingPlatform();
-  const isVerticalMoving = !isDisappearing && !isMoving && shouldSpawnVerticalMovingPlatform();
-  
+  const isVerticalMoving =
+    !isDisappearing && !isMoving && shouldSpawnVerticalMovingPlatform();
+
   const platform = {
     x: nextX,
     y: nextY,
     width: getPlatformWidth(),
     height: platformHeight,
-    color: isMoving ? "#4ECDC4" : isVerticalMoving ? "#FFB347" : `hsl(${Math.random() * 60 + 180}, 70%, 60%)`,
+    color: isMoving
+      ? "#4ECDC4"
+      : isVerticalMoving
+        ? "#FFB347"
+        : `hsl(${Math.random() * 60 + 180}, 70%, 60%)`,
     isDisappearing: isDisappearing,
     isMoving: isMoving,
     isVerticalMoving: isVerticalMoving,
     hasLanded: false,
     landTime: 0,
   };
-  
+
   if (isMoving) {
     platform.startingX = nextX;
     platform.targetX = nextX + 150;
     platform.speed = 1.5 + (Math.random() - 0.5) * 0.5;
-    platform.phase = 'extending';
+    platform.phase = "extending";
   }
-  
+
   if (isVerticalMoving) {
     platform.startingY = nextY;
     platform.speed = VERTICAL_MOVING_SPEED + (Math.random() - 0.5) * 0.5;
     platform.movementRange = VERTICAL_MOVING_RANGE;
-    platform.direction = Math.random() < 0.5 ? 'up' : 'down';
+    platform.direction = Math.random() < 0.5 ? "up" : "down";
   }
-  
+
   platforms.push(platform);
 }
 
 function updatePlayer(deltaTime) {
   updateMovingPlatforms(deltaTime);
   updateDisappearingPlatforms();
-  
+
   if (keys["a"] || keys["arrowleft"]) {
     player.velocityX = -player.speed;
     if (player.onMovingPlatform && !player.onMovingPlatform.isVerticalMoving) {
@@ -411,15 +434,16 @@ function updatePlayer(deltaTime) {
   player.onGround = false;
   const prevPlayerX = player.x;
   const prevPlayerY = player.y;
-  
+
   player.x += player.velocityX;
-  
+
   for (const platform of platforms) {
-    if (player.y < platform.y + platform.height && 
-        player.y + player.height > platform.y &&
-        player.x < platform.x + platform.width &&
-        player.x + player.width > platform.x) {
-      
+    if (
+      player.y < platform.y + platform.height &&
+      player.y + player.height > platform.y &&
+      player.x < platform.x + platform.width &&
+      player.x + player.width > platform.x
+    ) {
       if (prevPlayerX < player.x) {
         player.x = platform.x - player.width;
       } else {
@@ -428,26 +452,27 @@ function updatePlayer(deltaTime) {
       player.velocityX = 0;
     }
   }
-  
+
   player.y += player.velocityY;
-  
+
   for (const platform of platforms) {
-    if (player.x < platform.x + platform.width && 
-        player.x + player.width > platform.x &&
-        player.y < platform.y + platform.height &&
-        player.y + player.height > platform.y) {
-      
+    if (
+      player.x < platform.x + platform.width &&
+      player.x + player.width > platform.x &&
+      player.y < platform.y + platform.height &&
+      player.y + player.height > platform.y
+    ) {
       if (prevPlayerY < player.y) {
         player.y = platform.y - player.height;
         player.velocityY = 0;
         player.onGround = true;
-        
+
         if (platform.isMoving || platform.isVerticalMoving) {
           player.onMovingPlatform = platform;
         } else {
           player.onMovingPlatform = null;
         }
-        
+
         if (platform.isDisappearing && !platform.hasLanded) {
           platform.hasLanded = true;
           platform.landTime = Date.now();
@@ -461,12 +486,12 @@ function updatePlayer(deltaTime) {
 
   if (player.onMovingPlatform && player.onGround) {
     const platform = player.onMovingPlatform;
-    
+
     if (platform.deltaX !== undefined && platform.deltaX !== 0) {
       player.x += platform.deltaX;
       player.velocityX = 0;
     }
-    
+
     if (platform.deltaY !== undefined && platform.deltaY !== 0) {
       player.y += platform.deltaY;
       player.velocityY = 0;
@@ -491,7 +516,7 @@ function updatePlayer(deltaTime) {
     }
     cameraCurrentSpeed = Math.min(
       cameraCurrentSpeed + CAMERA_ACCELERATION * deltaTime,
-      CAMERA_MAX_SPEED
+      CAMERA_MAX_SPEED,
     );
     cameraX += cameraCurrentSpeed * deltaTime;
   }
@@ -530,16 +555,16 @@ function draw() {
     if (platform.isDisappearing && platform.hasLanded) {
       const now = Date.now();
       const fadeProgress = Math.min(1, (now - platform.landTime) / 1000);
-      ctx.globalAlpha = 1 - (fadeProgress * 0.7);
+      ctx.globalAlpha = 1 - fadeProgress * 0.7;
     }
-    
+
     ctx.fillStyle = platform.color;
     ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
 
     ctx.strokeStyle = "#2C3E50";
     ctx.lineWidth = 2;
     ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
-    
+
     ctx.globalAlpha = 1;
   }
 
@@ -582,7 +607,7 @@ function gameLoop() {
   const now = performance.now();
   const deltaTime = (now - lastFrameTime) / 1000;
   lastFrameTime = now;
-  
+
   if (gameRunning) {
     gameTime += deltaTime;
     updatePlayer(deltaTime);
