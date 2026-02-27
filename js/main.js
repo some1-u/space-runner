@@ -1,5 +1,10 @@
-import { updateCamera, getCameraX, resetCamera, getCameraCurrentSpeed } from "./camera.js";
-import { player, setupInput, updatePlayer, resetPlayer } from "./player.js";
+import {
+  updateCamera,
+  getCameraX,
+  resetCamera,
+  getCameraCurrentSpeed,
+} from "./camera.js";
+import { player, setupInput, updatePlayer, resetPlayer, updatePlayerAnimation, preloadAstronautSheets, drawPlayer, keys } from "./player.js";
 import {
   platforms,
   createInitialPlatform,
@@ -8,6 +13,8 @@ import {
   updateMovingPlatforms,
   removeOffscreenPlatforms,
   clearPlatforms,
+  tileImage,
+  PLATFORM_TILES,
 } from "./platforms.js";
 import {
   drawSpaceBackground,
@@ -56,6 +63,7 @@ function respawn() {
 
 function draw() {
   const cameraX = getCameraX();
+  const cameraY = 0;
 
   drawSpaceBackground(ctx, cameraX, viewWidth, viewHeight);
   drawStarfield(ctx, cameraX, viewWidth, viewHeight);
@@ -71,36 +79,42 @@ function draw() {
       ctx.globalAlpha = 1 - fadeProgress * 0.7;
     }
 
-    ctx.fillStyle = platform.color;
-    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    const tileConfig = PLATFORM_TILES.NORMAL;
+    
+    if (tileImage.complete) {
+      ctx.drawImage(
+        tileImage,
+        tileConfig.x,
+        tileConfig.y,
+        tileConfig.width,
+        tileConfig.height,
+        platform.x,
+        platform.y,
+        platform.width,
+        platform.height,
+      );
+    } else {
+      ctx.fillStyle = platform.isMoving ? "#4ECDC4" : 
+                     platform.isDisappearing ? "#FF6B6B" :
+                     platform.isVerticalMoving ? "#FFB347" : "#8B4513";
+      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    }
 
     ctx.strokeStyle = "#2C3E50";
     ctx.lineWidth = 2;
     ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
-
     ctx.globalAlpha = 1;
   }
 
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-
-  ctx.strokeStyle = "#2C3E50";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(player.x, player.y, player.width, player.height);
-
-  ctx.fillStyle = "#FFF";
-  ctx.fillRect(player.x + 8, player.y + 10, 8, 8);
-  ctx.fillRect(player.x + 24, player.y + 10, 8, 8);
-  ctx.fillStyle = "#000";
-  ctx.fillRect(player.x + 10, player.y + 12, 4, 4);
-  ctx.fillRect(player.x + 26, player.y + 12, 4, 4);
-
   ctx.restore();
+  drawPlayer(ctx, player, cameraX, cameraY);
 }
+
+preloadAstronautSheets();
 
 function gameLoop() {
   const now = performance.now();
-  const deltaTime = (now - lastFrameTime) / 1000;
+  const deltaTime = Math.min((now - lastFrameTime) / 1000, 0.1);
   lastFrameTime = now;
 
   if (gameRunning) {
@@ -126,10 +140,21 @@ function gameLoop() {
 
       removeOffscreenPlatforms(getCameraX());
     }
+
+    const animInput = getAnimationInput();
+    updatePlayerAnimation(player, animInput);
   }
 
   draw();
+  ctx.imageSmoothingEnabled = false;
   requestAnimationFrame(gameLoop);
+}
+
+function getAnimationInput() {
+  return {
+    left: !!(keys["arrowleft"] || keys["a"]),
+    right: !!(keys["arrowright"] || keys["d"]),
+  };
 }
 
 respawn();

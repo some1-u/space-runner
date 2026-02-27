@@ -48,7 +48,10 @@ function shouldSpawnDisappearingPlatform(gameTime) {
 
 function shouldSpawnMovingPlatform(gameTime) {
   const lastPlatform = platforms[platforms.length - 1];
-  if (lastPlatform && (lastPlatform.isDisappearing || lastPlatform.isVerticalMoving))
+  if (
+    lastPlatform &&
+    (lastPlatform.isDisappearing || lastPlatform.isVerticalMoving)
+  )
     return false;
 
   let platformsSinceLastMoving = 0;
@@ -69,7 +72,9 @@ function shouldSpawnVerticalMovingPlatform(gameTime) {
   const lastPlatform = platforms[platforms.length - 1];
   if (
     lastPlatform &&
-    (lastPlatform.isDisappearing || lastPlatform.isMoving || lastPlatform.isVerticalMoving)
+    (lastPlatform.isDisappearing ||
+      lastPlatform.isMoving ||
+      lastPlatform.isVerticalMoving)
   )
     return false;
 
@@ -181,7 +186,6 @@ export function createInitialPlatform(viewHeight, gameTime = 0) {
     y: viewHeight - 100,
     width: getPlatformWidth(gameTime),
     height: PLATFORM_HEIGHT,
-    color: "#4ECDC4",
   });
 }
 
@@ -214,7 +218,7 @@ export function generateNextPlatform(viewHeight, viewWidth, gameTime, player) {
   const yMin = PLATFORM_Y_MIN;
   let yMax = Math.min(
     viewHeight - PLATFORM_HEIGHT - 50,
-    viewHeight * PLATFORM_Y_MAX_FRAC
+    viewHeight * PLATFORM_Y_MAX_FRAC,
   );
   if (yMax <= yMin || !Number.isFinite(yMax)) {
     yMax = Math.max(yMin + 200, (viewHeight || 600) - PLATFORM_HEIGHT - 50);
@@ -288,7 +292,7 @@ export function generateNextPlatform(viewHeight, viewWidth, gameTime, player) {
   const gapMax = range.min + span * diff.gapFrac[1];
   const gap = Math.max(
     MIN_GAP,
-    Math.min(MAX_GAP, gapMin + Math.random() * (gapMax - gapMin))
+    Math.min(MAX_GAP, gapMin + Math.random() * (gapMax - gapMin)),
   );
   let nextX = lastPlatform.x + lastPlatform.width + gap;
 
@@ -307,7 +311,6 @@ export function generateNextPlatform(viewHeight, viewWidth, gameTime, player) {
     y: nextY,
     width: getPlatformWidth(gameTime),
     height: PLATFORM_HEIGHT,
-    color: `hsl(${Math.random() * 60 + 180}, 70%, 60%)`,
     isDisappearing,
     isMoving,
     isVerticalMoving,
@@ -344,3 +347,19 @@ export function removeOffscreenPlatforms(cameraX) {
 export function clearPlatforms() {
   platforms.length = 0;
 }
+
+// Platform tile atlas configuration
+const tileImage = new Image();
+tileImage.decoding = "async";
+tileImage.src = "images/Space_Runner/Tiles/RunnerTileSet.png";
+
+// Platform tile configuration
+// Single stretchable platform sprite (96×31px) with rounded ends
+const PLATFORM_TILES = {
+  NORMAL: { x: 0, y: 0, width: 96, height: 31 },  // Single platform sprite
+  MOVING: { x: 0, y: 0, width: 96, height: 31 },  // Same sprite, different color tint
+  DISAPPEARING: { x: 0, y: 0, width: 96, height: 31 },  // Same sprite, different color tint
+  VERTICAL_MOVING: { x: 0, y: 0, width: 96, height: 31 }  // Same sprite, different color tint
+};
+
+export { tileImage, PLATFORM_TILES };

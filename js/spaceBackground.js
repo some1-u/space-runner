@@ -9,21 +9,34 @@ const STAR_LAYERS = [
 ];
 const STAR_SPAN_X = 8000;
 const STAR_SPAN_Y = 1;
-const STAR_SIZE = 8;
+const STAR_SIZE = 12;
 
 const PLANET_PARALLAX = 0.08;
 const PLANET_MIN_SPAWN_DISTANCE = 10000;
 const PLANET_MAX_SPAWN_DISTANCE = 15000;
 const PLANET_POOL_SIZE = 8;
-const PLANET_MIN_RADIUS = 50;
-const PLANET_MAX_RADIUS = 100;
+const PLANET_MIN_RADIUS = 75;
+const PLANET_MAX_RADIUS = 150;
 
 const imgStar = new Image();
 imgStar.src = "images/pixelStar.png";
-const imgPlanets = [new Image(), new Image(), new Image()];
-imgPlanets[0].src = "images/planet1.png";
-imgPlanets[1].src = "images/planet2.png";
-imgPlanets[2].src = "images/planet3.png";
+
+// NOTE: Browser JS cannot auto-enumerate folder contents.
+// Add/adjust filenames here from your "images Pixel Art Space" folder.
+const SPACE_ART_PLANET_PATHS = [
+  "images/Pixel Art Space/Planet1.png",
+  "images/Pixel Art Space/Planet2.png",
+  "images/Pixel Art Space/Planet5.png",
+  "images/Pixel Art Space/Planet4.png",
+  "images/Pixel Art Space/Earth.png",
+  "images/Pixel Art Space/Moon.png",
+];
+
+const imgPlanets = SPACE_ART_PLANET_PATHS.map((src) => {
+  const img = new Image();
+  img.src = src;
+  return img;
+});
 
 let starsInitialized = false;
 let lastStarViewHeight = 0;
@@ -48,7 +61,7 @@ function ensureStarsInitialized(viewWidth, viewHeight) {
       list.push({
         x: Math.random() * STAR_SPAN_X,
         y: Math.random() * viewHeight * STAR_SPAN_Y,
-        brightness: 0.3 + Math.random() * (layer.maxBrightness - 0.3),
+        brightness: 0.7 + Math.random() * (layer.maxBrightness - 0.3),
       });
     }
     starLayers.push({ ...layer, list });
@@ -75,7 +88,9 @@ function maybeSpawnPlanet(cameraX, viewWidth, viewHeight) {
   planet.radius =
     PLANET_MIN_RADIUS + Math.random() * (PLANET_MAX_RADIUS - PLANET_MIN_RADIUS);
   planet.displaySize = planet.radius * 2;
-  planet.imageIndex = Math.floor(Math.random() * 3);
+  planet.imageIndex = imgPlanets.length
+    ? Math.floor(Math.random() * imgPlanets.length)
+    : -1;
   planet.parallax = PLANET_PARALLAX;
   if (!reuse) pool.push(planet);
 }
@@ -125,7 +140,7 @@ export function updateAndDrawPlanets(ctx, cameraX, viewWidth, viewHeight) {
     const size = p.displaySize || p.radius * 2;
     if (sx + size < -100 || sx - size > viewWidth + 100) continue;
 
-    const img = imgPlanets[p.imageIndex];
+    const img = p.imageIndex >= 0 ? imgPlanets[p.imageIndex] : null;
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.globalAlpha = 0.85;
       ctx.drawImage(img, sx - size / 2, p.y - size / 2, size, size);
