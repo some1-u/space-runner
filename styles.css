@@ -37,6 +37,30 @@ body {
     z-index: 10;
 }
 
+.score {
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    font-size: 48px;
+    font-weight: bold;
+    font-family: 'VT323', monospace;
+    color: #7ebcff;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    z-index: 10;
+}
+
+.high-score {
+    position: fixed;
+    top: 80px;
+    right: 40px;
+    font-size: 32px;
+    font-weight: bold;
+    font-family: 'VT323', monospace;
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    z-index: 10;
+}
+
 .instructions {
     font-size: 14px;
     opacity: 0.9;

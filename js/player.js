@@ -1,8 +1,8 @@
 export const player = {
   x: 100,
   y: 300,
-  width: 48,
-  height: 44,
+  width: 40,
+  height: 40,
   velocityX: 0,
   velocityY: 0,
   speed: 5,
@@ -16,8 +16,6 @@ export const player = {
 
 const keys = {};
 
-export { keys };
-
 export function setupInput() {
   document.addEventListener("keydown", (e) => {
     keys[e.key.toLowerCase()] = true;
@@ -29,31 +27,10 @@ export function setupInput() {
   document.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
   });
-  
-  window.keys = keys;
 }
 
 /*
-  Astronaut filmstrip configuration:
-  Based on sprite sheet specs:
-  - Image size: 144 × 24 px
-  - Frame size: 24 × 24 px each  
-  - Total frames: 6 per animation
-  - Layout: horizontal strip, left → right
-  - Spacing: none (frames touch edge-to-edge)
-  - Background: transparent
-  - Recommended: 8-12 FPS for idle animation
-  
-  Display configuration:
-  - Player size: 48 × 44 px (2x scale, reduced height for platform alignment)
-  - Scale factor: 2.0x (24×24 → 48×48 visual, 44px collision)
-  - Anchor point: center-bottom for better platform alignment
-  
-  Animation configuration:
-  - FRAME_W / FRAME_H: single-frame size (24×24 px)
-  - FRAME_COUNT: max frames available (6)
-  - STATES.*.start/end: frame range per animation state
-  - STEP_TICKS: game ticks before advancing frame (8-12 FPS recommended)
+  Astronaut animation configuration
 */
 const ASTRONAUT_ANIM = {
   FRAME_W: 24,
@@ -151,8 +128,10 @@ export function updatePlayerAnimation(player, input) {
 }
 
 export function drawPlayer(ctx, player, cameraX = 0, cameraY = 0) {
+  // canvas-only astronaut draw (no DOM/CSS classes)
   initPlayerAnimation(player);
-  const def = ASTRONAUT_ANIM.STATES[player.animState] || ASTRONAUT_ANIM.STATES.idle;
+  const def =
+    ASTRONAUT_ANIM.STATES[player.animState] || ASTRONAUT_ANIM.STATES.idle;
   const sheetRef = astronautSheets[def.sheet] || astronautSheets.idle;
   const imageReady = sheetRef.loaded && sheetRef.img.complete;
 
@@ -162,6 +141,7 @@ export function drawPlayer(ctx, player, cameraX = 0, cameraY = 0) {
   const dh = player.height;
 
   if (!imageReady) {
+    // non-blocking fallback while image loads
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(dx, dy, dw, dh);
     return;
@@ -171,11 +151,8 @@ export function drawPlayer(ctx, player, cameraX = 0, cameraY = 0) {
     def.start,
     Math.min(def.end, def.start + player.animFrameIndex),
   );
-  
   const sx = frame * ASTRONAUT_ANIM.FRAME_W;
   const sy = 0;
-  const sw = ASTRONAUT_ANIM.FRAME_W;
-  const sh = ASTRONAUT_ANIM.FRAME_H;
 
   ctx.save();
   if (player.facing === -1) {
@@ -183,19 +160,20 @@ export function drawPlayer(ctx, player, cameraX = 0, cameraY = 0) {
     ctx.scale(-1, 1);
     ctx.translate(-(dx + dw / 2), 0);
   }
-  
   ctx.drawImage(
     sheetRef.img,
     sx,
     sy,
-    sw,
-    sh,
+    ASTRONAUT_ANIM.FRAME_W,
+    ASTRONAUT_ANIM.FRAME_H,
     dx,
     dy,
     dw,
     dh,
   );
   ctx.restore();
+
+  // ...existing code...
 }
 
 /**
@@ -204,10 +182,18 @@ export function drawPlayer(ctx, player, cameraX = 0, cameraY = 0) {
 export function updatePlayer(deltaTime, platforms, viewHeight) {
   if (keys["a"] || keys["arrowleft"]) {
     player.velocityX = -player.speed;
+    if (player.onMovingPlatform && !player.onMovingPlatform.isVerticalMoving) {
+      player.onMovingPlatform = null;
+    }
   } else if (keys["d"] || keys["arrowright"]) {
     player.velocityX = player.speed;
+    if (player.onMovingPlatform && !player.onMovingPlatform.isVerticalMoving) {
+      player.onMovingPlatform = null;
+    }
   } else {
-    player.velocityX *= 0.8;
+    if (!player.onMovingPlatform || player.onMovingPlatform.isVerticalMoving) {
+      player.velocityX *= 0.8;
+    }
   }
 
   if ((keys["w"] || keys["arrowup"] || keys[" "]) && player.onGround) {
@@ -225,6 +211,7 @@ export function updatePlayer(deltaTime, platforms, viewHeight) {
   player.x += player.velocityX;
 
   for (const platform of platforms) {
+    // Skip horizontal collision for vertical moving platforms
     if (platform.isVerticalMoving) continue;
 
     if (
@@ -233,6 +220,8 @@ export function updatePlayer(deltaTime, platforms, viewHeight) {
       player.x < platform.x + platform.width &&
       player.x + player.width > platform.x
     ) {
+      // ... rest of collision code
+
       if (prevPlayerX < player.x) {
         player.x = platform.x - player.width;
       } else {

@@ -1,15 +1,30 @@
 <!doctype html>
+
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Endless Platformer</title>
+
+    <title>Space Runner</title>
+
     <link rel="stylesheet" href="styles.css" />
+
     <style>
+      /* Disable old CSS character visual */
+      #player,
+      .player,
+      .character {
+        display: none !important;
+        background: none !important;
+        animation: none !important;
+      }
+
       canvas {
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
+
       /* Disable legacy DOM/CSS player visuals */
       #player,
       .player,
@@ -21,16 +36,20 @@
       }
     </style>
   </head>
+
   <body>
     <div class="game-container">
       <canvas id="gameCanvas"></canvas>
+
       <div class="ui">
         <div class="instructions">
           <p>Use Arrow Keys or WASD to move</p>
+
           <p>Space or Up Arrow to jump</p>
         </div>
       </div>
     </div>
+
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

@@ -13,13 +13,15 @@ import {
   VERTICAL_MOVING_SPEED,
   VERTICAL_MOVING_RANGE,
 } from "./constants.js";
+import { score } from "./main.js";
 
 export const platforms = [];
 export { PLATFORM_HEIGHT as platformHeight };
 
 export function getPlatformWidth(gameTime) {
   const roll = Math.random();
-  const difficultyProgress = Math.min(1, gameTime / 180);
+  // Use score-based difficulty: score of 300 ≈ 30 seconds, score of 600 ≈ 60 seconds
+  const difficultyProgress = Math.min(1, score / 600);
   const narrowWeight = 0.2 + difficultyProgress * 0.3;
   const mediumWeight = 0.6 - difficultyProgress * 0.2;
   const wideWeight = 0.2 - difficultyProgress * 0.1;
@@ -40,7 +42,8 @@ function shouldSpawnDisappearingPlatform(gameTime) {
   const lastPlatform = platforms[platforms.length - 1];
   if (lastPlatform && lastPlatform.isMoving) return false;
 
-  const difficultyProgress = Math.min(1, gameTime / 180);
+  // Use score-based difficulty: score of 300 ≈ 30 seconds, score of 600 ≈ 60 seconds
+  const difficultyProgress = Math.min(1, score / 600);
   const spawnChance = 0.1 + (0.25 - 0.1) * difficultyProgress;
 
   return Math.random() < spawnChance;
@@ -62,7 +65,8 @@ function shouldSpawnMovingPlatform(gameTime) {
 
   if (platformsSinceLastMoving < 3) return false;
 
-  const difficultyProgress = Math.min(1, gameTime / 180);
+  // Use score-based difficulty: score of 300 ≈ 30 seconds, score of 600 ≈ 60 seconds
+  const difficultyProgress = Math.min(1, score / 600);
   const spawnChance = 0.08 + (0.2 - 0.08) * difficultyProgress;
 
   return Math.random() < spawnChance;
@@ -86,7 +90,8 @@ function shouldSpawnVerticalMovingPlatform(gameTime) {
 
   if (platformsSinceLastVerticalMoving < 3) return false;
 
-  const difficultyProgress = Math.min(1, gameTime / 180);
+  // Use score-based difficulty: score of 300 ≈ 30 seconds, score of 600 ≈ 60 seconds
+  const difficultyProgress = Math.min(1, score / 600);
   const spawnChance = 0.07 + (0.15 - 0.07) * difficultyProgress;
 
   return Math.random() < spawnChance;
