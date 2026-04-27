@@ -8,6 +8,10 @@
 
     <title>Space Runner</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css" />
 
     <style>
@@ -40,11 +44,11 @@
   <body>
     <div class="game-container">
       <canvas id="gameCanvas"></canvas>
-
+      <div class="score">Score: <span id="scoreValue">0</span></div>
+      <div class="high-score">High Score: <span id="highScoreValue">0</span></div>
       <div class="ui">
         <div class="instructions">
           <p>Use Arrow Keys or WASD to move</p>
-
           <p>Space or Up Arrow to jump</p>
         </div>
       </div>
